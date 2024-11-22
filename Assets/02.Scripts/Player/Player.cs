@@ -14,6 +14,7 @@ public class Player : MonoBehaviour
 
     private Vector2 _moveInput;
     private bool _isJumping = false;
+    private bool _canJumping = true;
 
     private void Awake()
     {
@@ -45,20 +46,31 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // TODO 점프중엔 이동 막기
-        Vector2 velocity = new Vector2(_moveInput.x * _moveSpeed, _rb.velocity.y);
-        _rb.velocity = velocity;
+        if (_canJumping)
+        {
+            Vector2 velocity = new Vector2(_moveInput.x * _moveSpeed, _rb.velocity.y);
+            _rb.velocity = velocity;
+
+            if (_moveInput.x > 0)
+                _spriteRenderer.flipX = true;
+            else if (_moveInput.x < 0)
+                _spriteRenderer.flipX = false;
+        }
 
         if (_isJumping)
         {
             _rb.AddForce(Vector2.up * _jumpForce, ForceMode2D.Impulse);            
             _isJumping = false;
         }
+    }
 
-        if (_moveInput.x > 0)
-            _spriteRenderer.flipX = true;
-        else if (_moveInput.x < 0)
-            _spriteRenderer.flipX = false;
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        // TODO: Tag Name Enum화
+        if (collision.transform.CompareTag("Ground"))
+        {
+            _canJumping = true;
+        }
     }
 
     private void OnMovePerformed(InputAction.CallbackContext context)
@@ -79,8 +91,10 @@ public class Player : MonoBehaviour
 
     private void OnJumpPerformed(InputAction.CallbackContext context)
     {
-        // 땅인지 확인
-        _isJumping = true;
-        Debug.Log("JUMP!");
+        if (_canJumping && !_isJumping)
+        {
+            _canJumping = false;
+            _isJumping = true;
+        }
     }
 }
